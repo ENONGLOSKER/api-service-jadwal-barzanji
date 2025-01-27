@@ -28,6 +28,10 @@ function writeDatabase(data) {
 }
 
 // Endpoint untuk mendapatkan semua data (GET /items)
+app.get('/', (req, res) => {
+    res.json({ message: "hello ini api service untuk jadwal barzanji" });
+});
+
 app.get('/items', (req, res) => {
     const data = readDatabase();
     res.json(data);
