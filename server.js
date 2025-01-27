@@ -11,15 +11,14 @@ const app = express();
 app.use(cors()); // Aktifkan CORS untuk semua origin
 app.use(express.json()); // Parsing JSON body
 
-// File database (disimpan di folder /tmp)
+// File database (disimpan di folder /tmp untuk kompatibilitas Vercel)
 const DB_FILE = path.join('/tmp', 'data.json');
 
 // Helper untuk membaca file database
 function readDatabase() {
     try {
         if (!fs.existsSync(DB_FILE)) {
-            // Jika file tidak ada, buat file kosong
-            fs.writeFileSync(DB_FILE, JSON.stringify([]));
+            fs.writeFileSync(DB_FILE, JSON.stringify([])); // Buat file kosong jika belum ada
         }
         const data = fs.readFileSync(DB_FILE, 'utf8');
         return JSON.parse(data);
@@ -61,7 +60,6 @@ app.post('/items', (req, res) => {
     const { nama, tanggal, alamat } = req.body;
 
     if (!nama || !tanggal || !alamat) {
-        console.log('Input tidak valid:', req.body);
         return res.status(400).json({ error: 'Semua field (nama, tanggal, alamat) harus diisi.' });
     }
 
@@ -79,10 +77,58 @@ app.post('/items', (req, res) => {
         data.push(newItem);
         writeDatabase(data);
 
-        console.log('Data setelah ditambah:', data);
         res.status(201).json(newItem);
     } catch (err) {
         console.error('Error pada POST /items:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Endpoint untuk memperbarui data berdasarkan ID (PUT /items/:id)
+app.put('/items/:id', (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const { nama, tanggal, alamat } = req.body;
+
+    if (!nama || !tanggal || !alamat) {
+        return res.status(400).json({ error: 'Semua field (nama, tanggal, alamat) harus diisi.' });
+    }
+
+    try {
+        const data = readDatabase();
+        const index = data.findIndex(item => item.id === id);
+
+        if (index === -1) {
+            return res.status(404).json({ error: 'Data tidak ditemukan.' });
+        }
+
+        // Perbarui data
+        data[index] = { ...data[index], nama, tanggal, alamat };
+        writeDatabase(data);
+
+        res.json(data[index]);
+    } catch (err) {
+        console.error('Error pada PUT /items/:id:', err.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Endpoint untuk menghapus data berdasarkan ID (DELETE /items/:id)
+app.delete('/items/:id', (req, res) => {
+    const id = parseInt(req.params.id, 10);
+
+    try {
+        const data = readDatabase();
+        const newData = data.filter(item => item.id !== id);
+
+        if (newData.length === data.length) {
+            return res.status(404).json({ error: 'Data tidak ditemukan.' });
+        }
+
+        writeDatabase(newData);
+
+        res.json({ message: 'Data berhasil dihapus.' });
+    } catch (err) {
+        console.error('Error pada DELETE /items/:id:', err.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
