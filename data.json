@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": 1,
+    "nama": "Saipul Adnan, QH.,S.Pd",
+    "tanggal": "2025-02-21",
+    "alamat": "Dasan Bangket"
+  },
+  {
+    "id": 2,
+    "nama": "Saipul 2",
+    "tanggal": "2025-02-21",
+    "alamat": "Dasan Bangket"
+  }
+]
